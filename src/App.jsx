@@ -7,7 +7,7 @@ import Students from './pages/Students';
 
 function App() {
   return (
-    <Router basename="/my-app"> {/* Đổi nếu deploy ở thư mục gốc thì bỏ dòng này */}
+    <Router > {/* Đổi nếu deploy ở thư mục gốc thì bỏ dòng này */}
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark px-3">
         <Link className="navbar-brand" to="/">Quản lý</Link>
         <div className="navbar-nav">
