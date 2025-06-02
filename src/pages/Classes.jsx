@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 
 function Classes() {
-  const [classes, setClasses] = useState([]);
-  const [form, setForm] = useState({ name: '' });
-  const [editingId, setEditingId] = useState(null);
+  const [classes, setClasses] = useState([])
+  const [className, setClassName] = useState('')
+  const [editingId, setEditingId] = useState(null)
 
   useEffect(() => {
     fetchClasses();
