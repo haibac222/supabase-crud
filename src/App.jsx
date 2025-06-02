@@ -1,89 +1,105 @@
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient('https://easeretmxqwohwufyuga.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhc2VyZXRteHF3d2h3dWZ5dWdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3OTQwNTQsImV4cCI6MjA2NDM3MDA1NH0.wwPOESaiuhSD6aLGy4SeUEuCtyW8zIwmEHBEF22wHPQ')
+import { supabase } from './supabaseClient' // Đảm bảo bạn đã cấu hình supabaseClient.js
 
 function App() {
-  const [students, setStudents] = useState([])
-  const [name, setName] = useState('')
-  const [editId, setEditId] = useState(null)
-  const [editName, setEditName] = useState('')
+  const [classes, setClasses] = useState([])
+  const [className, setClassName] = useState('')
+  const [editingId, setEditingId] = useState(null)
 
   useEffect(() => {
-    fetchStudents()
+    fetchClasses()
   }, [])
 
-  async function fetchStudents() {
-    const { data } = await supabase.from('students').select('*')
-    setStudents(data || [])
+  async function fetchClasses() {
+    const { data, error } = await supabase.from('classes').select('*')
+    if (error) {
+      console.error('Lỗi khi lấy dữ liệu:', error)
+    } else {
+      setClasses(data)
+    }
   }
 
-  async function addStudent() {
-    if (!name) return
-    await supabase.from('students').insert({ name })
-    setName('')
-    fetchStudents()
+  async function addClass() {
+    if (!className.trim()) return
+    const { error } = await supabase.from('classes').insert({ name: className })
+    if (error) {
+      console.error('Lỗi khi thêm:', error)
+    }
+    setClassName('')
+    fetchClasses()
   }
 
-  async function deleteStudent(id) {
-    await supabase.from('students').delete().eq('id', id)
-    fetchStudents()
+  async function updateClass() {
+    if (!className.trim() || !editingId) return
+    const { error } = await supabase
+      .from('classes')
+      .update({ name: className })
+      .eq('id', editingId)
+    if (error) {
+      console.error('Lỗi khi cập nhật:', error)
+    }
+    setClassName('')
+    setEditingId(null)
+    fetchClasses()
   }
 
-  function startEdit(student) {
-    setEditId(student.id)
-    setEditName(student.name)
-  }
-
-  async function saveEdit(id) {
-    if (!editName) return
-    await supabase.from('students').update({ name: editName }).eq('id', id)
-    setEditId(null)
-    setEditName('')
-    fetchStudents()
-  }
-
-  function cancelEdit() {
-    setEditId(null)
-    setEditName('')
+  async function deleteClass(id) {
+    const { error } = await supabase.from('classes').delete().eq('id', id)
+    if (error) {
+      console.error('Lỗi khi xóa:', error)
+    }
+    fetchClasses()
   }
 
   return (
     <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Danh sách sinh viên</h1>
+      <h1 className="text-2xl font-bold mb-4">Quản lý lớp học</h1>
+
       <div className="flex gap-2 mb-4">
         <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Nhập tên sinh viên"
+          value={className}
+          onChange={(e) => setClassName(e.target.value)}
+          placeholder="Nhập tên lớp"
           className="border p-2 flex-1"
         />
-        <button onClick={addStudent} className="bg-blue-500 text-white px-4 py-2 rounded">
-          Thêm
-        </button>
+        {editingId ? (
+          <button
+            onClick={updateClass}
+            className="bg-yellow-500 text-white px-4 py-2 rounded"
+          >
+            Cập nhật
+          </button>
+        ) : (
+          <button
+            onClick={addClass}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Thêm
+          </button>
+        )}
       </div>
+
       <ul>
-        {students.map((s) => (
-          <li key={s.id} className="flex justify-between items-center py-1 border-b">
-            {editId === s.id ? (
-              <>
-                <input
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="border p-1 flex-1 mr-2"
-                />
-                <button onClick={() => saveEdit(s.id)} className="bg-green-500 text-white px-2 py-1 rounded mr-1">Lưu</button>
-                <button onClick={cancelEdit} className="text-gray-500">Hủy</button>
-              </>
-            ) : (
-              <>
-                {s.name}
-                <div>
-                  <button onClick={() => startEdit(s)} className="text-blue-500 mr-2">Sửa</button>
-                  <button onClick={() => deleteStudent(s.id)} className="text-red-500">Xóa</button>
-                </div>
-              </>
-            )}
+        {classes.map((cls) => (
+          <li key={cls.id} className="flex justify-between items-center py-2 border-b">
+            <span>{cls.name}</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setClassName(cls.name)
+                  setEditingId(cls.id)
+                }}
+                className="text-yellow-500"
+              >
+                Sửa
+              </button>
+              <button
+                onClick={() => deleteClass(cls.id)}
+                className="text-red-500"
+              >
+                Xóa
+              </button>
+            </div>
           </li>
         ))}
       </ul>
